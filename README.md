@@ -23,6 +23,28 @@
 
 This repository contains the evaluation code, the model adapters, and the data construction pipelines for real videos and Unreal Engine.
 
+
+## Citation
+If you find this work useful for your research, kindly consider citing our paper:
+
+```bibtex
+@article{lu2026orbia,
+    title   = {Orbia: Do Generated Videos Form a Consistent {3D} World?},
+    author  = {Dongyue Lu and Guian Fang and Hur Lim and Yonggang Wu and Yanrong Wang and Hongshan Chen and Shengju Qian and Yue Liao and Wei Chow and Lingdong Kong and Tianxin Huang and Yu Yang and Hongji Yang and Junchao Huang and Alan Liang and Yihao Wang and Zihan Wang and Rong Li and Hanlin Chen and Xin Wang and Wei Tsang Ooi and Mike Zheng Shou and Shuicheng Yan},
+    journal = {arXiv preprint arXiv:2610.20693},
+    year    = {2026}
+}
+```
+```bibtex
+@article{survey_3d_4d_world_models,
+    title   = {{3D} and {4D} World Modeling: A Survey},
+    author  = {Lingdong Kong and Yu Yang and Jianbiao Mei and Youquan Liu and Ao Liang and Dekai Zhu and Dongyue Lu and Wei Yin and Xiaotao Hu and Mingkai Jia and Junyuan Deng and Kaiwen Zhang and Yang Wu and Tianyi Yan and Shenyuan Gao and Song Wang and Linfeng Li and Liang Pan and Yong Liu and Jianke Zhu and Wei Tsang Ooi and Steven C. H. Hoi and Ziwei Liu},
+    journal = {arXiv preprint arXiv:2509.07996},
+    year    = {2025}
+}
+```
+
+
 ## Evaluation Dimensions
 
 | Tier | Dimension | Metrics | Weight |
@@ -242,17 +264,6 @@ For Claude Code, copy them into your project with `mkdir -p .claude/skills && cp
 ## Acknowledgements
 
 ORBIA builds on [SpatialVID](https://github.com/NJU-3DV/SpatialVID), [Sekai](https://github.com/Lixsp11/sekai-codebase), [MiraData](https://github.com/mira-space/MiraData), [ScanNet++](https://github.com/scannetpp/scannetpp), [ViPE](https://github.com/nv-tlabs/vipe), [Depth Anything 3](https://github.com/ByteDance-Seed/Depth-Anything-3), [SAM 3](https://github.com/facebookresearch/sam3), [Qwen3.5](https://github.com/QwenLM/Qwen3.5), [DINOv2](https://github.com/facebookresearch/dinov2), [VBench](https://github.com/Vchitect/VBench), [WBench](https://github.com/meituan-longcat/WBench), [AMT](https://github.com/MCG-NKU/AMT), [HPSv3](https://github.com/MizzenAI/HPSv3), [LPIPS](https://github.com/richzhang/PerceptualSimilarity), [gsplat](https://github.com/nerfstudio-project/gsplat) and [Open3D](https://github.com/isl-org/Open3D). We thank the authors for releasing their code and data.
-
-## Citation
-
-```bibtex
-@article{lu2026orbia,
-  title   = {Orbia: Do Generated Videos Form a Consistent 3D World?},
-  author  = {Dongyue Lu and Guian Fang and Hur Lim and Yonggang Wu and Yanrong Wang and Hongshan Chen and Shengju Qian and Yue Liao and Wei Chow and Lingdong Kong and Tianxin Huang and Yu Yang and Hongji Yang and Junchao Huang and Alan Liang and Yihao Wang and Zihan Wang and Rong Li and Hanlin Chen and Xin Wang and Wei Tsang Ooi and Mike Zheng Shou and Shuicheng Yan},
-  journal = {arXiv preprint},
-  year    = {2026}
-}
-```
 
 ## License
 
