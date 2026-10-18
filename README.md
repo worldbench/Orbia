@@ -2,7 +2,7 @@
 
 # Orbia: Do Generated Videos Form a Consistent 3D World?
 
-[![Paper](https://img.shields.io/badge/Paper-PDF-B31B1B)](https://orbia-bench.github.io/paper/orbia.pdf)
+[![arXiv](https://img.shields.io/badge/arXiv-2610.20693-B31B1B)](https://arxiv.org/pdf/2610.20693)
 [![Project Page](https://img.shields.io/badge/Project-Page-4285F4)](https://orbia-bench.github.io/)
 [![Dataset](https://img.shields.io/badge/Dataset-HuggingFace-FF9D00?logo=huggingface&logoColor=white)](https://huggingface.co/datasets/Orbia/Orbia)
 [![License](https://img.shields.io/badge/License-Apache--2.0-lightgrey)](LICENSE)
@@ -30,7 +30,7 @@ If you find this work useful for your research, kindly consider citing our paper
 ```bibtex
 @article{lu2026orbia,
     title   = {Orbia: Do Generated Videos Form a Consistent {3D} World?},
-    author  = {Dongyue Lu and Guian Fang and Hur Lim and Yonggang Wu and Yanrong Wang and Hongshan Chen and Shengju Qian and Yue Liao and Wei Chow and Lingdong Kong and Tianxin Huang and Yu Yang and Hongji Yang and Junchao Huang and Alan Liang and Yihao Wang and Zihan Wang and Rong Li and Hanlin Chen and Xin Wang and Wei Tsang Ooi and Mike Zheng Shou and Shuicheng Yan},
+    author  = {Dongyue Lu and Guian Fang and Hur Lim and Yonggang Wu and Yanrong Wang and Hongshan Chen and Shengju Qian and Yue Liao and Wei Chow and Lingdong Kong and Tianxin Huang and Yu Yang and Hongji Yang and Junchao Huang and Ao Liang and Yihao Wang and Zihan Wang and Rong Li and Hanlin Chen and Xin Wang and Wei Tsang Ooi and Mike Zheng Shou and Shuicheng Yan},
     journal = {arXiv preprint arXiv:2610.20693},
     year    = {2026}
 }
