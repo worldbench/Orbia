@@ -13,13 +13,17 @@
 
 **ORBIA** is a benchmark for the 3D consistency of interactive video world models. Given an input image, a scene caption and a camera trajectory, a world model should not only produce good-looking video that follows the controls, but also keep the scene it was given, remember the content it generated, and produce views that form one consistent 3D world. ORBIA evaluates these properties with registered RGB-D references, annotated anchors and controlled revisits.
 
+## Updates
+
+- **2026-10-30:** Added [WorldCrafter-Fast](https://github.com/TencentARC/WorldCrafter) to the leaderboard.
+
 ## Highlights
 
 - **Three dimensions of 3D consistency.** We separate *input preservation* (does the model keep the scene and landmarks in the input image?), *generated-content persistence* (does newly generated content stay the same when the camera comes back?) and *3D self-consistency* (do the generated views agree in geometry and support a shared 3D reconstruction?).
 - **Exploration-and-revisit trajectories.** Six trajectory templates (forward–backward, lateral, yaw, arc, orbit, peek) move the camera away from the input view, revisit regions outside it, and return to the start. Each case comes in a 22-second version and a minute-long version with three revisits.
 - **Reference-grounded evaluation.** Every case has registered RGB-D views at the input and query poses and verified *anchors*, i.e. distinctive static objects, so preservation is measured against real references and per landmark rather than by a single image-level score.
 - **Diverse, curated data.** 720 cases from ScanNet++, SpatialVID, Sekai, MiraData, our own recordings and 48 Unreal Engine environments, selected from over 110,000 source samples with over 300 hours of annotation and review.
-- **Works with any world model.** Adapters for camera-conditioned, action-conditioned and image+text-to-video models. We evaluate 27 models.
+- **Works with any world model.** Adapters for camera-conditioned, action-conditioned and image+text-to-video models.
 
 This repository contains the evaluation code, the model adapters, and the data construction pipelines for real videos and Unreal Engine.
 
@@ -80,37 +84,38 @@ Short cases have 357 frames (22 s) and long cases 961 frames (60 s), at 1280×72
 
 **Submit your model:** generate videos for all 720 cases and email them to dongyue.lu@u.nus.edu and guianfang@u.nus.edu, with or without your own evaluation results. See the [submission guide](docs/submission.md).
 
-Scores of the 27 models evaluated in the paper, sorted by Overall (25% Control, 25% Quality, 10% each for Input Preservation, Persistence and 3D Consistency, 20% Stability). Best per column in bold.
+Scores of all evaluated models, sorted by Overall (25% Control, 25% Quality, 10% each for Input Preservation, Persistence and 3D Consistency, 20% Stability). Best per column in bold.
 
 | # | Model | Type | Overall | Control | Quality | Input Pres. | Persistence | 3D Consist. | Stability |
 | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | SolarWM-H3 | Camera | **76.32** | 79.93 | 74.76 | 69.26 | **70.28** | 68.84 | **84.05** |
-| 2 | Lyra2 | Camera | 74.77 | **81.64** | 71.37 | 68.79 | 70.25 | 61.51 | 82.31 |
-| 3 | EVOKE | Camera | 72.70 | 66.47 | 76.48 | 68.81 | 66.43 | 68.02 | 83.18 |
-| 4 | Echo-WM | Camera | 72.24 | 70.74 | 75.02 | 65.91 | 61.42 | 65.26 | 82.69 |
-| 5 | Gen3C | Camera | 71.95 | 75.51 | 67.55 | **75.23** | 68.58 | 60.16 | 78.96 |
-| 6 | Matrix game 3.5 | Camera | 68.07 | 64.18 | 74.03 | 66.93 | 60.82 | 54.61 | 76.41 |
-| 7 | Seedance2.5 | Image+Text | 67.44 | 43.23 | 76.97 | 72.84 | 67.70 | 72.54 | 80.39 |
-| 8 | AlayaWorld | Camera | 67.01 | 61.68 | 71.04 | 70.17 | 56.62 | 58.92 | 76.31 |
-| 9 | Genie3 | Action | 66.72 | 55.26 | 74.43 | 61.01 | 54.41 | 61.25 | 83.15 |
-| 10 | LingBot-World v2 | Camera | 65.98 | 58.48 | 75.34 | 61.54 | 52.00 | 57.11 | 77.28 |
-| 11 | HY-WorldPlay | Camera | 65.50 | 45.26 | 72.06 | 66.84 | 69.84 | 70.34 | 77.32 |
-| 12 | Kling3.0 | Image+Text | 65.23 | 38.58 | 77.38 | 69.14 | 63.32 | 71.30 | 79.30 |
-| 13 | SANA-WM | Camera | 65.08 | 59.39 | 73.22 | 63.19 | 51.95 | 54.10 | 75.03 |
-| 14 | HappyOyster | Action | 64.34 | 60.49 | 68.78 | 58.23 | 46.31 | 59.17 | 78.25 |
-| 15 | Cosmos3-Super | Image+Text | 63.72 | 27.92 | **79.04** | 66.04 | 69.75 | **74.55** | 79.73 |
-| 16 | HunyuanVideo1.5 | Image+Text | 63.27 | 36.09 | 77.07 | 63.12 | 57.44 | 71.31 | 78.96 |
-| 17 | Cosmos3-Nano | Camera | 62.75 | 35.70 | 74.25 | 66.78 | 66.29 | 70.10 | 74.71 |
-| 18 | LingBot-World v1 | Camera | 62.73 | 49.12 | 73.84 | 59.56 | 50.71 | 58.93 | 75.37 |
-| 19 | Voyager | Camera | 62.72 | 60.92 | 68.05 | 58.65 | 43.72 | 46.32 | 78.04 |
-| 20 | MiniMax-H3 | Image+Text | 62.00 | 32.48 | 78.09 | 63.36 | 55.79 | 69.42 | 77.51 |
-| 21 | DreamX-World | Camera | 61.79 | 48.99 | 74.96 | 60.96 | 48.70 | 48.73 | 74.82 |
-| 22 | LTX2.5 | Image+Text | 61.25 | 26.51 | 77.96 | 64.81 | 60.25 | 71.64 | 77.30 |
-| 23 | FantasyWorld | Camera | 60.64 | 39.16 | 70.70 | 63.08 | 60.17 | 63.53 | 72.51 |
-| 24 | Wan2.7 | Image+Text | 60.55 | 31.31 | 76.46 | 65.96 | 54.35 | 64.19 | 75.79 |
-| 25 | ABot-World | Action | 58.87 | 47.06 | 66.97 | 57.47 | 45.22 | 48.32 | 76.32 |
-| 26 | LongCat | Image+Text | 57.18 | 23.76 | 77.30 | 58.89 | 47.77 | 64.11 | 74.22 |
-| 27 | Astra | Camera | 52.30 | 28.45 | 61.30 | 59.38 | 44.74 | 59.91 | 67.31 |
+| 1 | WorldCrafter-Fast | Camera | **80.50** | **85.79** | 73.26 | **78.21** | **84.77** | 70.72 | **86.85** |
+| 2 | SolarWM-H3 | Camera | 76.32 | 79.93 | 74.76 | 69.26 | 70.28 | 68.84 | 84.05 |
+| 3 | Lyra2 | Camera | 74.77 | 81.64 | 71.37 | 68.79 | 70.25 | 61.51 | 82.31 |
+| 4 | EVOKE | Camera | 72.70 | 66.47 | 76.48 | 68.81 | 66.43 | 68.02 | 83.18 |
+| 5 | Echo-WM | Camera | 72.24 | 70.74 | 75.02 | 65.91 | 61.42 | 65.26 | 82.69 |
+| 6 | Gen3C | Camera | 71.95 | 75.51 | 67.55 | 75.23 | 68.58 | 60.16 | 78.96 |
+| 7 | Matrix game 3.5 | Camera | 68.07 | 64.18 | 74.03 | 66.93 | 60.82 | 54.61 | 76.41 |
+| 8 | Seedance2.5 | Image+Text | 67.44 | 43.23 | 76.97 | 72.84 | 67.70 | 72.54 | 80.39 |
+| 9 | AlayaWorld | Camera | 67.01 | 61.68 | 71.04 | 70.17 | 56.62 | 58.92 | 76.31 |
+| 10 | Genie3 | Action | 66.72 | 55.26 | 74.43 | 61.01 | 54.41 | 61.25 | 83.15 |
+| 11 | LingBot-World v2 | Camera | 65.98 | 58.48 | 75.34 | 61.54 | 52.00 | 57.11 | 77.28 |
+| 12 | HY-WorldPlay | Camera | 65.50 | 45.26 | 72.06 | 66.84 | 69.84 | 70.34 | 77.32 |
+| 13 | Kling3.0 | Image+Text | 65.23 | 38.58 | 77.38 | 69.14 | 63.32 | 71.30 | 79.30 |
+| 14 | SANA-WM | Camera | 65.08 | 59.39 | 73.22 | 63.19 | 51.95 | 54.10 | 75.03 |
+| 15 | HappyOyster | Action | 64.34 | 60.49 | 68.78 | 58.23 | 46.31 | 59.17 | 78.25 |
+| 16 | Cosmos3-Super | Image+Text | 63.72 | 27.92 | **79.04** | 66.04 | 69.75 | **74.55** | 79.73 |
+| 17 | HunyuanVideo1.5 | Image+Text | 63.27 | 36.09 | 77.07 | 63.12 | 57.44 | 71.31 | 78.96 |
+| 18 | Cosmos3-Nano | Camera | 62.75 | 35.70 | 74.25 | 66.78 | 66.29 | 70.10 | 74.71 |
+| 19 | LingBot-World v1 | Camera | 62.73 | 49.12 | 73.84 | 59.56 | 50.71 | 58.93 | 75.37 |
+| 20 | Voyager | Camera | 62.72 | 60.92 | 68.05 | 58.65 | 43.72 | 46.32 | 78.04 |
+| 21 | MiniMax-H3 | Image+Text | 62.00 | 32.48 | 78.09 | 63.36 | 55.79 | 69.42 | 77.51 |
+| 22 | DreamX-World | Camera | 61.79 | 48.99 | 74.96 | 60.96 | 48.70 | 48.73 | 74.82 |
+| 23 | LTX2.5 | Image+Text | 61.25 | 26.51 | 77.96 | 64.81 | 60.25 | 71.64 | 77.30 |
+| 24 | FantasyWorld | Camera | 60.64 | 39.16 | 70.70 | 63.08 | 60.17 | 63.53 | 72.51 |
+| 25 | Wan2.7 | Image+Text | 60.55 | 31.31 | 76.46 | 65.96 | 54.35 | 64.19 | 75.79 |
+| 26 | ABot-World | Action | 58.87 | 47.06 | 66.97 | 57.47 | 45.22 | 48.32 | 76.32 |
+| 27 | LongCat | Image+Text | 57.18 | 23.76 | 77.30 | 58.89 | 47.77 | 64.11 | 74.22 |
+| 28 | Astra | Camera | 52.30 | 28.45 | 61.30 | 59.38 | 44.74 | 59.91 | 67.31 |
 
 Type: Camera = camera-conditioned, Action = action-conditioned, Image+Text = image+text-to-video. 
 
