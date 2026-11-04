@@ -28,7 +28,7 @@ def main():
              metrics=args.metrics, geometry_root=args.geometry_root, tiers=args.tiers,
              model=args.model, group=args.group, control_profile=args.control_profile)
     if args.stage == 'full':
-        columns = (*TIERS, 'Overall')
+        columns = (*TIERS, 'Overall', 'Overall_geo')
         print('Model\t' + '\t'.join(columns))
         for row in rows:
             values = ['-' if row.get(key) is None else f'{row[key]:.2f}' for key in columns]
