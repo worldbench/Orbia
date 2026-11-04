@@ -147,16 +147,31 @@ def _build_real_backend(
         if torch.cuda.is_available():
             torch.cuda.reset_peak_memory_stats()
         inference_started = perf_counter()
-        prediction = model.inference(
-            image=[context_images[int(item["frame_index"])] if context_images is not None else item["rgb"] for item in context],
-            extrinsics=context_w2c,
-            intrinsics=context_k,
-            process_res=int(request["process_resolution"]),
-            process_res_method="upper_bound_resize",
-            align_to_input_ext_scale=True,
-            infer_gs=True,
-            export_dir=None,
-        )
+        # DA3 builds the Gaussians by unprojecting its depth with its own
+        # predicted intrinsics, then inference() replaces prediction.intrinsics
+        # with the given ones. Keep the predicted intrinsics so the held-out
+        # views are rendered with the camera the Gaussians were built for.
+        predicted = {}
+        convert_to_prediction = model._convert_to_prediction
+
+        def keep_predicted_intrinsics(raw_output):
+            predicted["intrinsics"] = raw_output["intrinsics"][0].float().cpu().numpy()
+            return convert_to_prediction(raw_output)
+
+        model._convert_to_prediction = keep_predicted_intrinsics
+        try:
+            prediction = model.inference(
+                image=[context_images[int(item["frame_index"])] if context_images is not None else item["rgb"] for item in context],
+                extrinsics=context_w2c,
+                intrinsics=context_k,
+                process_res=int(request["process_resolution"]),
+                process_res_method="upper_bound_resize",
+                align_to_input_ext_scale=True,
+                infer_gs=True,
+                export_dir=None,
+            )
+        finally:
+            model._convert_to_prediction = convert_to_prediction
         inference_s = perf_counter() - inference_started
         if prediction.gaussians is None:
             raise RuntimeError("DA3 inference returned no Gaussians")
@@ -166,10 +181,14 @@ def _build_real_backend(
         )
         target_w2c = target_w2c @ reference_c2w
         target_w2c[:, :3, 3] /= camera_scale
-        target_k = np.asarray(
-            [item["intrinsics"] for item in heldout], dtype=np.float32
-        )
         resolution = int(request["resolution"])
+        # The mean predicted context intrinsics, from DA3's processed size to
+        # the render resolution.
+        processed_height, processed_width = prediction.depth.shape[-2:]
+        render_k = predicted["intrinsics"].mean(axis=0)
+        render_k[0] *= resolution / processed_width
+        render_k[1] *= resolution / processed_height
+        target_k = np.repeat(render_k[None].astype(np.float32), len(heldout), axis=0)
         gaussians = prediction.gaussians
         viewmats = torch.from_numpy(target_w2c.astype(np.float32)).to(gaussians.means)
         pixel_k = torch.from_numpy(target_k).to(gaussians.means)
@@ -240,6 +259,7 @@ def _build_real_backend(
                 "infer_gs": True,
                 "align_to_input_ext_scale": True,
                 "camera_source": "vipe_w2c_intrinsics",
+                "render_intrinsics": "da3_predicted_context_mean",
                 "context_only_reconstruction": True,
                 "context_normalization_scale": camera_scale,
                 "normalized_context_count": len(normalized_context),
