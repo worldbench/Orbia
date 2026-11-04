@@ -22,11 +22,15 @@ def main():
                            help='tiers to evaluate (default: all six)')
     selection.add_argument('--metrics', nargs='+', help='advanced: raw metric names without tier summaries')
     parser.add_argument('--geometry-root', help='reuse a previous geometry directory')
+    parser.add_argument('--gs-render-intrinsics', choices=('given', 'predicted'), default='given',
+                        help='T5 reconstruction: render held-out views with the given intrinsics (default) '
+                             "or with DA3's predicted intrinsics, which the Gaussians are built with")
     args = parser.parse_args()
     rows = evaluate(args.dataset, args.videos, args.config, args.output,
              devices=args.devices, threads=args.threads, stage=args.stage,
              metrics=args.metrics, geometry_root=args.geometry_root, tiers=args.tiers,
-             model=args.model, group=args.group, control_profile=args.control_profile)
+             model=args.model, group=args.group, control_profile=args.control_profile,
+             gs_render_intrinsics=args.gs_render_intrinsics)
     if args.stage == 'full':
         columns = (*TIERS, 'Overall')
         print('Model\t' + '\t'.join(columns))

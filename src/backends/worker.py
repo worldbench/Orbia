@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--input-revision', default='1')
     parser.add_argument('--geometry-root', type=Path, help='read-only geometry from an earlier run')
     parser.add_argument('--extra-site', action='append', default=[])
+    parser.add_argument('--gs-render-intrinsics', choices=('given', 'predicted'), default='given')
     args = parser.parse_args()
     if args.threads < 1:
         raise ValueError('threads must be positive')
@@ -214,6 +215,9 @@ def main():
                     gs_root = case_output/'da3'
                     gs_identity = gs_identity_for(geometry_identity, config, plan, info.frame_count)
                     gs_identity['pose_cache'] = [file_identity(p) for p in sorted((geometry/'evaluator_pose_cache').glob('*.npy'))]
+                    # Keyed only when changed, so caches from the default renders stay valid.
+                    if args.gs_render_intrinsics != 'given':
+                        gs_identity['render_intrinsics'] = args.gs_render_intrinsics
                     gs_ok = lambda: da3_artifact_complete(gs_root, context_count=options.da3_context_views, heldout_count=options.da3_heldout_views)
                     gs_reused = cache.ready('gs', gs_identity, gs_ok)
                     if 'da3_reconstruction' in selected and not gs_reused:
@@ -223,7 +227,7 @@ def main():
                         request = prepare_da3_case(preloaded_case=case, decoded_frames=frames, context_images=context_images, case_root=job['case_root'], video_path=job['video'], output_root=case_output, pose_cache=geometry/'evaluator_pose_cache', config=config, video_info=info)
                         if render is None:
                             same_checkpoint = Path(config['da3_checkpoint']).resolve() == checkpoint.resolve()
-                            render = _build_real_backend(Path(config['da3_repo']), Path(config['da3_checkpoint']), options.device, resident_model=resident_model(base, options.device) if same_checkpoint else None)
+                            render = _build_real_backend(Path(config['da3_repo']), Path(config['da3_checkpoint']), options.device, resident_model=resident_model(base, options.device) if same_checkpoint else None, render_intrinsics=args.gs_render_intrinsics)
                         render(_load_request(request), gs_root/'bridge_result.json', context_images=context_images)
                         del context_images
                         if not gs_ok():
