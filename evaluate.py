@@ -32,7 +32,7 @@ def main():
              model=args.model, group=args.group, control_profile=args.control_profile,
              gs_render_intrinsics=args.gs_render_intrinsics)
     if args.stage == 'full':
-        columns = (*TIERS, 'Overall')
+        columns = (*TIERS, 'Overall', 'Overall_geo')
         print('Model\t' + '\t'.join(columns))
         for row in rows:
             values = ['-' if row.get(key) is None else f'{row[key]:.2f}' for key in columns]

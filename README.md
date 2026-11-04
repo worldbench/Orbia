@@ -196,7 +196,7 @@ python evaluate.py --videos videos/my-model --tiers T3 T4 --devices 0,1,2,3
 
 For each video, the evaluator recovers cameras and depth with DA3 (DA3 Streaming for long videos), computes the per-case metrics, and then normalizes and averages them into tier scores. For action-conditioned models add `--control-profile action_only`; for image+text-to-video models add `--group ti2v`.
 
-**3. Read the results.** Tier scores, Overall and ranks are written to `results/scores/scores.csv`, and per-case measurements to `results/<model>/results/<case_id>/report.json`. Rerunning the command resumes unfinished cases.
+**3. Read the results.** Tier scores, Overall and ranks are written to `results/scores/scores.csv`, and per-case measurements to `results/<model>/results/<case_id>/report.json`. Each tier and Overall also has a `_geo` column that combines the same parts with weighted geometric means instead of arithmetic ones (averages over cases stay arithmetic), so a model weak on one part scores lower. Rerunning the command resumes unfinished cases.
 
 See [docs/evaluation.md](docs/evaluation.md) for all options and the scoring details.
 
