@@ -143,6 +143,18 @@ def _build_real_backend(
         ).eval().to(device)
     for parameter in model.parameters():
         parameter.requires_grad = False
+    if render_intrinsics == "predicted":
+        # inference() replaces prediction.intrinsics with the given ones; keep
+        # a copy of the predicted ones, which the Gaussians are built with.
+        convert_to_prediction = model._convert_to_prediction
+
+        def convert_keeping_intrinsics(raw_output):
+            prediction = convert_to_prediction(raw_output)
+            if prediction.intrinsics is not None:
+                prediction.predicted_intrinsics = prediction.intrinsics.copy()
+            return prediction
+
+        model._convert_to_prediction = convert_keeping_intrinsics
 
     def render(request: dict, output: Path, *, context_images=None) -> None:
         context = request["context"]
@@ -157,30 +169,16 @@ def _build_real_backend(
         if torch.cuda.is_available():
             torch.cuda.reset_peak_memory_stats()
         inference_started = perf_counter()
-        # inference() replaces prediction.intrinsics with the given ones, so
-        # read the predicted intrinsics from the raw model output.
-        predicted = {}
-        convert_to_prediction = model._convert_to_prediction
-
-        def keep_predicted_intrinsics(raw_output):
-            predicted["intrinsics"] = raw_output["intrinsics"][0].float().cpu().numpy()
-            return convert_to_prediction(raw_output)
-
-        if render_intrinsics == "predicted":
-            model._convert_to_prediction = keep_predicted_intrinsics
-        try:
-            prediction = model.inference(
-                image=[context_images[int(item["frame_index"])] if context_images is not None else item["rgb"] for item in context],
-                extrinsics=context_w2c,
-                intrinsics=context_k,
-                process_res=int(request["process_resolution"]),
-                process_res_method="upper_bound_resize",
-                align_to_input_ext_scale=True,
-                infer_gs=True,
-                export_dir=None,
-            )
-        finally:
-            model._convert_to_prediction = convert_to_prediction
+        prediction = model.inference(
+            image=[context_images[int(item["frame_index"])] if context_images is not None else item["rgb"] for item in context],
+            extrinsics=context_w2c,
+            intrinsics=context_k,
+            process_res=int(request["process_resolution"]),
+            process_res_method="upper_bound_resize",
+            align_to_input_ext_scale=True,
+            infer_gs=True,
+            export_dir=None,
+        )
         inference_s = perf_counter() - inference_started
         if prediction.gaussians is None:
             raise RuntimeError("DA3 inference returned no Gaussians")
@@ -194,7 +192,7 @@ def _build_real_backend(
         if render_intrinsics == "predicted":
             # From DA3's processed size to the render resolution.
             processed_height, processed_width = prediction.depth.shape[-2:]
-            render_k = predicted["intrinsics"].mean(axis=0)
+            render_k = prediction.predicted_intrinsics.mean(axis=0)
             render_k[0] *= resolution / processed_width
             render_k[1] *= resolution / processed_height
             target_k = np.repeat(render_k[None].astype(np.float32), len(heldout), axis=0)
