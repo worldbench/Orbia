@@ -104,7 +104,8 @@ def aggregate_directory(root, output):
 
 
 def evaluate(dataset, videos, config, output, devices='0', threads=4, stage='full', metrics=None,
-             geometry_root=None, tiers=None, model=None, group='world', control_profile='pose_and_action'):
+             geometry_root=None, tiers=None, model=None, group='world', control_profile='pose_and_action',
+             gs_render_intrinsics='given'):
     if tiers is not None and metrics is not None:
         raise ValueError('choose --tiers or --metrics, not both')
     selected_tiers = normalize_tiers(tiers) if metrics is None else None
@@ -140,6 +141,7 @@ def evaluate(dataset, videos, config, output, devices='0', threads=4, stage='ful
                 command.extend(['--tiers',*selected_tiers])
             if geometry_root:
                 command.extend(['--geometry-root',str(local_path(geometry_root))])
+            command.extend(['--gs-render-intrinsics',gs_render_intrinsics])
             env = dict(os.environ,CUDA_VISIBLE_DEVICES=device,PYTHONPATH=str(ROOT))
             log = (controls/f'worker_{rank}.log').open('a')
             children.append((subprocess.Popen(command,env=env,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT),log))

@@ -110,9 +110,19 @@ def _safe_render_batch_size(gaussian_count: int, sh_coefficients: int, view_coun
     return min(4, int(view_count), safe_views)
 
 
+# How the held-out views are rendered. DA3 builds the Gaussians by unprojecting
+# its depth with its own predicted intrinsics; "given" renders with the request's
+# intrinsics (the original behavior), "predicted" with the mean predicted
+# context intrinsics, the camera the Gaussians were built for.
+RENDER_INTRINSICS = ("given", "predicted")
+
+
 def _build_real_backend(
     repo: Path, checkpoint: Path, device: str, *, resident_model=None,
+    render_intrinsics: str = "given",
 ) -> Callable[[dict, Path], None]:
+    if render_intrinsics not in RENDER_INTRINSICS:
+        raise ValueError(f"render_intrinsics must be one of {RENDER_INTRINSICS}")
     if not repo.is_dir():
         raise FileNotFoundError(f"DA3 repository does not exist: {repo}")
     if not checkpoint.is_dir():
@@ -147,10 +157,8 @@ def _build_real_backend(
         if torch.cuda.is_available():
             torch.cuda.reset_peak_memory_stats()
         inference_started = perf_counter()
-        # DA3 builds the Gaussians by unprojecting its depth with its own
-        # predicted intrinsics, then inference() replaces prediction.intrinsics
-        # with the given ones. Keep the predicted intrinsics so the held-out
-        # views are rendered with the camera the Gaussians were built for.
+        # inference() replaces prediction.intrinsics with the given ones, so
+        # read the predicted intrinsics from the raw model output.
         predicted = {}
         convert_to_prediction = model._convert_to_prediction
 
@@ -158,7 +166,8 @@ def _build_real_backend(
             predicted["intrinsics"] = raw_output["intrinsics"][0].float().cpu().numpy()
             return convert_to_prediction(raw_output)
 
-        model._convert_to_prediction = keep_predicted_intrinsics
+        if render_intrinsics == "predicted":
+            model._convert_to_prediction = keep_predicted_intrinsics
         try:
             prediction = model.inference(
                 image=[context_images[int(item["frame_index"])] if context_images is not None else item["rgb"] for item in context],
@@ -182,13 +191,17 @@ def _build_real_backend(
         target_w2c = target_w2c @ reference_c2w
         target_w2c[:, :3, 3] /= camera_scale
         resolution = int(request["resolution"])
-        # The mean predicted context intrinsics, from DA3's processed size to
-        # the render resolution.
-        processed_height, processed_width = prediction.depth.shape[-2:]
-        render_k = predicted["intrinsics"].mean(axis=0)
-        render_k[0] *= resolution / processed_width
-        render_k[1] *= resolution / processed_height
-        target_k = np.repeat(render_k[None].astype(np.float32), len(heldout), axis=0)
+        if render_intrinsics == "predicted":
+            # From DA3's processed size to the render resolution.
+            processed_height, processed_width = prediction.depth.shape[-2:]
+            render_k = predicted["intrinsics"].mean(axis=0)
+            render_k[0] *= resolution / processed_width
+            render_k[1] *= resolution / processed_height
+            target_k = np.repeat(render_k[None].astype(np.float32), len(heldout), axis=0)
+        else:
+            target_k = np.asarray(
+                [item["intrinsics"] for item in heldout], dtype=np.float32
+            )
         gaussians = prediction.gaussians
         viewmats = torch.from_numpy(target_w2c.astype(np.float32)).to(gaussians.means)
         pixel_k = torch.from_numpy(target_k).to(gaussians.means)
@@ -259,7 +272,7 @@ def _build_real_backend(
                 "infer_gs": True,
                 "align_to_input_ext_scale": True,
                 "camera_source": "vipe_w2c_intrinsics",
-                "render_intrinsics": "da3_predicted_context_mean",
+                "render_intrinsics": render_intrinsics,
                 "context_only_reconstruction": True,
                 "context_normalization_scale": camera_scale,
                 "normalized_context_count": len(normalized_context),
@@ -286,6 +299,10 @@ def main() -> int:
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--render-intrinsics", choices=RENDER_INTRINSICS, default="given",
+        help="intrinsics for the held-out renders (default: given)",
+    )
     args = parser.parse_args()
 
     if args.request is not None:
@@ -311,7 +328,8 @@ def main() -> int:
             jobs.append(job)
 
     render = _build_real_backend(
-        args.repo.resolve(), args.checkpoint.resolve(), args.device
+        args.repo.resolve(), args.checkpoint.resolve(), args.device,
+        render_intrinsics=args.render_intrinsics,
     )
     records = []
     for job in jobs:
