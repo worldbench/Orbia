@@ -121,7 +121,7 @@ Scores of all evaluated models, sorted by Overall (25% Control, 25% Quality, 10%
 
 Type: Camera = camera-conditioned, Action = action-conditioned, Image+Text = image+text-to-video. 
 
-The WorldCrafter-Fast videos and evaluation reports are released by its authors at [Drexubery/WorldCrafter-Fast-Orbia](https://huggingface.co/datasets/Drexubery/WorldCrafter-Fast-Orbia).
+The generated videos of most evaluated models are available at [Orbia/Orbia-videos](https://huggingface.co/datasets/Orbia/Orbia-videos). The WorldCrafter-Fast videos and evaluation reports are released by its authors at [Drexubery/WorldCrafter-Fast-Orbia](https://huggingface.co/datasets/Drexubery/WorldCrafter-Fast-Orbia).
 
 ## Installation
 
