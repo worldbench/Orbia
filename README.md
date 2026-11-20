@@ -15,6 +15,7 @@
 
 ## Updates
 
+- **2026-11-20:** Released the generated videos used in our evaluation at [Orbia/Orbia-videos](https://huggingface.co/datasets/Orbia/Orbia-videos).
 - **2026-11-04:** Added [Hy-Nomas](https://hy-nomas.hy.tencent.com/) to the leaderboard.
 - **2026-10-30:** Added [WorldCrafter-Fast](https://github.com/TencentARC/WorldCrafter) to the leaderboard.
 
